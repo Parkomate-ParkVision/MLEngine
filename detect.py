@@ -1,0 +1,45 @@
+from ultralytics import YOLO
+import cv2
+import json
+from PIL import Image
+import numpy as np
+
+cam_port = 0
+
+def take_picture():
+    cam = cv2.VideoCapture(cam_port)
+    result, image = cam.read()
+    # if result:
+    #     cv2.imshow("feed", image)
+    #     # cv2.imwrite("feed.png", image)
+    #     cv2.waitKey(0)
+    # else:
+    #     print("No image detected. Please! try again")
+    cam.release()
+    image = Image.fromarray(image)
+    image = image.tobytes()
+    return image
+
+def detect_numberplate(image):
+    model = YOLO(model='./models/best.pt')
+    results = model.predict(image, conf=0.5)
+    json_results = results[0].tojson()
+
+    encoded_json_results = str(json_results).replace("\n",'').replace(" ",'')
+    encoded_json_results = json.loads(encoded_json_results)
+    return encoded_json_results
+
+def get_cropped_images(image):
+    model = YOLO(model='./models/best.pt')
+    results = model.predict(image, conf=0.5)
+    json_results = results[0].tojson()
+
+    encoded_json_results = str(json_results).replace("\n",'').replace(" ",'')
+    encoded_json_results = json.loads(encoded_json_results)
+
+    cropped_images = []
+    for pred in encoded_json_results:
+        x1, y1, x2, y2 = pred['box']['x1'], pred['box']['y1'], pred['box']['x2'], pred['box']['y2']
+        cropped_image = image.crop((x1, y1, x2, y2))
+        cropped_images.append(cropped_image.tobytes())
+    return cropped_images
