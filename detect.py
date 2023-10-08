@@ -7,6 +7,10 @@ import numpy as np
 cam_port = 0
 
 def take_picture():
+    """
+    Returns:
+        A PIL.Image object containing the picture taken from the webcam.
+    """
     cam = cv2.VideoCapture(cam_port)
     result, image = cam.read()
     # if result:
@@ -21,6 +25,12 @@ def take_picture():
     return image
 
 def detect_numberplate(image):
+    """
+    image: PIL.Image
+
+    Returns:
+        A list of dictionaries containing the result of the detection.
+    """
     model = YOLO(model='./models/best.pt')
     results = model.predict(image, conf=0.5)
     json_results = results[0].tojson()
@@ -30,8 +40,15 @@ def detect_numberplate(image):
     return encoded_json_results
 
 def get_cropped_images(image):
+    """
+    image: PIL.Image
+
+    Returns:
+        A list of PIL.Image objects containing the cropped images of the detected number plates.
+    """
     model = YOLO(model='./models/best.pt')
     results = model.predict(image, conf=0.5)
+    results[0].save_crop("predictions")
     json_results = results[0].tojson()
 
     encoded_json_results = str(json_results).replace("\n",'').replace(" ",'')
