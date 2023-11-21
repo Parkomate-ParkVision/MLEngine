@@ -19,7 +19,6 @@ def get_text(image, json_results = None):
         for r in json_results:
             if r['name'] == 'license-plate':
                 x1, y1, x2, y2 = r['box']['x1'], r['box']['y1'], r['box']['x2'], r['box']['y2']
-                # print("Coordinates: "+str(x1), y1, x2, y2, sep=", ")
                 image2 = image.crop((x1, y1, x2, y2))
                 break
     result = reader.readtext(np.array(image2), detail = 0)
