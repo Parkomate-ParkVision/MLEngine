@@ -9,7 +9,10 @@ import base64
 import datetime
 
 from detect import detect_numberplate, take_picture, get_cropped_images
-from ocr import get_text
+from ocr import get_text, getOCR
+import numpy as np 
+import cv2
+import os
 
 app = FastAPI()
 
@@ -74,7 +77,7 @@ async def detect2(file: UploadFile = File(...)):
     return JSONResponse(content={"images": images_base64})
 
 @app.post("/api/detect3")
-async def detect2(file: UploadFile = File(...)):
+async def detect3(file: UploadFile = File(...)):
     '''
     image: UploadFile = File(...)
 
@@ -85,22 +88,53 @@ async def detect2(file: UploadFile = File(...)):
     file_bytes = file.file.read()
     image = Image.open(io.BytesIO(file_bytes))
     result = detect_numberplate(image)
-    text = get_text(image, result)
-    print(datetime.datetime.now())
+    text = getOCR(image, result)
     return JSONResponse(content={"result": result, "text": text})
 
-@app.post("/ws/detect")
-async def websocket_endpoint(websocket: WebSocket):
+@app.post("/api/detect_license_plates")
+async def detect_license_plates(video: UploadFile = File(...)):
     '''
-    websocket: WebSocket
+    video: UploadFile = File(...)
 
     Returns:
-        Stream of the detected and cropped images
+        result: A list of dictionaries containing the result of the license plate detection.
+        text: A list of lists containing the OCR text for each frame.
     '''
-    await websocket.accept()
+    video_bytes = await video.read()
+
+    # Save the video temporarily
+    temp_video_path = 'temp_video.mp4'
+    with open(temp_video_path, 'wb') as temp_video:
+        temp_video.write(video_bytes)
+
+    # Open the saved video with VideoCapture
+    video_capture = cv2.VideoCapture(temp_video_path)
+
+    result_list = []
+    text_list = []
+
     while True:
-        frame_data = await websocket.receive_bytes()
-        image = Image.open(frame_data)
-        results = get_cropped_images(image)
-        images_base64  = [base64.b64encode(chunk).decode('utf-8') for chunk in results]
-        await websocket.send_bytes(images_base64)
+        ret, frame = video_capture.read()
+        if not ret:
+            break
+
+        image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        frame_results = detect_numberplate(image)
+        result_list.extend(frame_results)
+
+        frame_text = getOCR(image, frame_results)
+        text_list.append(frame_text)
+
+    # Cleanup: Close VideoCapture and remove the temporary video file
+    video_capture.release()
+    cv2.destroyAllWindows()
+    try:
+        os.remove(temp_video_path)
+    except OSError:
+        pass
+
+    return JSONResponse(content={"result": result_list, "text": text_list})
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

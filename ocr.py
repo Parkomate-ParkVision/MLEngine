@@ -3,6 +3,7 @@ from PIL import Image
 from detect import get_cropped_images
 import numpy as np
 import re
+import cv2
 
 reader = easyocr.Reader(['en'])
 PATTERN = r"^[a-zA-Z]{2}[0-9]{2}[a-zA-Z]{2}[0-9]{4}$"
@@ -28,3 +29,32 @@ def get_text(image, json_results = None):
             if re.match(PATTERN, text):
                 final.append(text)
     return final
+
+def getOCR(image, results):
+    ocr_texts = []
+
+    for result in results:
+        if result['name'] == 'license-plate':
+            x1, y1, x2, y2 = (
+                int(result['box']['x1']),
+                int(result['box']['y1']),
+                int(result['box']['x2']),
+                int(result['box']['y2'])
+            )
+            
+            # Crop the license plate region
+            plate_image = image.crop((x1, y1, x2, y2))
+
+            # Convert the cropped image to OpenCV format
+            plate_image_cv = np.array(plate_image)
+
+            # Convert image to grayscale
+            gray = cv2.cvtColor(plate_image_cv, cv2.COLOR_RGB2GRAY)
+
+            # Use the original OCR mechanism
+            results = reader.readtext(gray)
+            for result in results:
+                if len(result) > 1 and len(result[1]) > 0:
+                    ocr_texts.append(result[1])
+
+    return ocr_texts
