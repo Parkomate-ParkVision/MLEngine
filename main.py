@@ -124,7 +124,8 @@ async def detect_license_plates(video: UploadFile = File(...)):
 
         frame_text = getOCR(image, frame_results)
         text_list.append(frame_text)
-
+    
+    text_list = [text for text in text_list if text != []]
     # Cleanup: Close VideoCapture and remove the temporary video file
     video_capture.release()
     cv2.destroyAllWindows()
