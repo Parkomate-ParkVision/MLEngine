@@ -1,6 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Response, WebSocket
-from fastapi.exceptions import HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, File, UploadFile, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
@@ -10,7 +8,6 @@ import datetime
 
 from detect import detect_numberplate, take_picture, get_cropped_images
 from ocr import get_text, getOCR
-import numpy as np 
 import cv2
 import os
 
@@ -138,4 +135,4 @@ async def detect_license_plates(video: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8080)
