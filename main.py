@@ -6,7 +6,7 @@ import io
 import base64
 import datetime
 
-from detect import detect_numberplate, take_picture, get_cropped_images
+from detect import detect_numberplate, take_picture, get_cropped_images, detect_vehicle_type
 from ocr import get_text, getOCR
 import cv2
 import os
@@ -35,14 +35,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     return {"message": "Welcome!", "endpoints": ENDPOINTS}
+
 
 @app.get("/api/capture", response_class=Response)
 async def capture():
     image = take_picture()
     return Response(image, media_type="image/png")
+
 
 @app.post("/api/detect")
 async def detect(image: UploadFile = File(...)):
@@ -58,6 +61,7 @@ async def detect(image: UploadFile = File(...)):
     response = {"result": result}
     return response
 
+
 @app.post("/api/detect2")
 async def detect2(file: UploadFile = File(...)):
     '''
@@ -69,9 +73,11 @@ async def detect2(file: UploadFile = File(...)):
     file_bytes = file.file.read()
     image = Image.open(io.BytesIO(file_bytes))
     results = get_cropped_images(image)
-    images_base64  = [base64.b64encode(chunk).decode('utf-8') for chunk in results]
+    images_base64 = [base64.b64encode(chunk).decode('utf-8')
+                     for chunk in results]
     print(datetime.datetime.now())
     return JSONResponse(content={"images": images_base64})
+
 
 @app.post("/api/detect3")
 async def detect3(file: UploadFile = File(...)):
@@ -87,6 +93,7 @@ async def detect3(file: UploadFile = File(...)):
     result = detect_numberplate(image)
     text = getOCR(image, result)
     return JSONResponse(content={"result": result, "text": text})
+
 
 @app.post("/api/detect_license_plates")
 async def detect_license_plates(video: UploadFile = File(...)):
@@ -121,7 +128,7 @@ async def detect_license_plates(video: UploadFile = File(...)):
 
         frame_text = getOCR(image, frame_results)
         text_list.append(frame_text)
-    
+
     text_list = [text for text in text_list if text != []]
     # Cleanup: Close VideoCapture and remove the temporary video file
     video_capture.release()
@@ -132,6 +139,15 @@ async def detect_license_plates(video: UploadFile = File(...)):
         pass
 
     return JSONResponse(content={"result": result_list, "text": text_list})
+
+
+@app.post("/vehicle-detection")
+async def get_vehicle_type(file: UploadFile = File(...)):
+    file_bytes = file.file.read()
+    image = Image.open(io.BytesIO(file_bytes))
+    result = detect_vehicle_type(image)
+    return JSONResponse(content={"result": result})
+
 
 if __name__ == "__main__":
     import uvicorn

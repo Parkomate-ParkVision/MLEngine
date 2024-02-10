@@ -62,3 +62,19 @@ def get_cropped_images(image):
         )
         cropped_images.append(cropped_image.tobytes())
     return cropped_images
+
+
+def detect_vehicle_type(image):
+    """
+    image: PIL.Image
+
+    Returns:
+        A list of dictionaries containing the result of the detection.
+    """
+    model = YOLO(model='./models/vehicle-detection.pt')
+    results = model.predict(image, conf=0.5)
+    json_results = results[0].tojson()
+
+    encoded_json_results = str(json_results).replace("\n", '').replace(" ", '')
+    encoded_json_results = json.loads(encoded_json_results)
+    return encoded_json_results
