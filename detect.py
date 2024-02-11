@@ -78,3 +78,31 @@ def detect_vehicle_type(image):
     encoded_json_results = str(json_results).replace("\n", '').replace(" ", '')
     encoded_json_results = json.loads(encoded_json_results)
     return encoded_json_results
+
+
+def detect_parking_slot(image: Image.Image):
+    """
+    image: PIL.Image
+
+    Returns:
+        Json response containing the result of the detection.
+    """
+    model = YOLO(model='./models/vehicle-orientation.pt')
+    results = model.predict(image, conf=0.5)
+    json_results = results[0].tojson()
+
+    encoded_json_results = str(json_results).replace("\n", '').replace(" ", '')
+    result = json.loads(encoded_json_results)
+    if result == []:
+        return {"result": "No parking slot detected"}
+    try:
+        box = result[0]['box']
+        x1, x2 = box['x1'], box['x2'],
+        width, _ = image.size
+        mid_x = (x1 + x2) / 2
+        if mid_x < width / 2:
+            return {"result": "Upper parking"}
+        else:
+            return {"result": "Lower parking"}
+    except Exception as e:
+        return {"result": "No parking slot detected", "error": str(e)}

@@ -6,7 +6,13 @@ import io
 import base64
 import datetime
 
-from detect import detect_numberplate, take_picture, get_cropped_images, detect_vehicle_type
+from detect import (
+    detect_numberplate,
+    take_picture,
+    get_cropped_images,
+    detect_vehicle_type,
+    detect_parking_slot
+)
 from ocr import get_text, getOCR
 import cv2
 import os
@@ -75,7 +81,6 @@ async def detect2(file: UploadFile = File(...)):
     results = get_cropped_images(image)
     images_base64 = [base64.b64encode(chunk).decode('utf-8')
                      for chunk in results]
-    print(datetime.datetime.now())
     return JSONResponse(content={"images": images_base64})
 
 
@@ -141,11 +146,19 @@ async def detect_license_plates(video: UploadFile = File(...)):
     return JSONResponse(content={"result": result_list, "text": text_list})
 
 
-@app.post("/vehicle-detection")
+@app.post("/api/vehicle-detection")
 async def get_vehicle_type(file: UploadFile = File(...)):
     file_bytes = file.file.read()
     image = Image.open(io.BytesIO(file_bytes))
     result = detect_vehicle_type(image)
+    return JSONResponse(content={"result": result})
+
+
+@app.post("/api/parking-detection")
+async def get_parking_slot(file: UploadFile = File(...)):
+    file_bytes = file.file.read()
+    image = Image.open(io.BytesIO(file_bytes))
+    result = detect_parking_slot(image)
     return JSONResponse(content={"result": result})
 
 
