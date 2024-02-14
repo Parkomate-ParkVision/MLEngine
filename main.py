@@ -35,6 +35,7 @@ ENDPOINTS = [
     "api/detect2",
     "api/detect3",
     "ws/detect"
+    "api/video_feed"
 ]
 
 origins = [
@@ -171,7 +172,7 @@ async def get_parking_slot(file: UploadFile = File(...)):
     return JSONResponse(content={"result": result})
 
 
-@app.get("/video_feed")
+@app.get("/api/video_feed")
 async def video_feed(url: str):
     try:
         cap = cv2.VideoCapture(url)
