@@ -5,6 +5,15 @@ from PIL import Image
 import io
 import base64
 import datetime
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+import cv2
+import httpx
+import numpy as np
+from io import BytesIO
+import asyncio
+import ffmpeg
+import subprocess
 
 from detect import (
     detect_numberplate,
@@ -161,6 +170,28 @@ async def get_parking_slot(file: UploadFile = File(...)):
     result = detect_parking_slot(image)
     return JSONResponse(content={"result": result})
 
+
+@app.get("/video_feed")
+async def video_feed(url: str):
+    try:
+        process = (
+            ffmpeg.input(url)
+            .output("pipe:", format="mjpeg", vcodec="mjpeg", vf="fps=24")
+            .run_async(pipe_stdout=True, pipe_stderr=True)  
+        )
+
+        def generate():
+            while True:
+                frame = process.stdout.read(1024)
+                if not frame:
+                    break
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+        return StreamingResponse(generate(), media_type="multipart/x-mixed-replace;boundary=frame")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
