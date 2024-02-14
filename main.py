@@ -35,7 +35,6 @@ ENDPOINTS = [
     "api/detect2",
     "api/detect3",
     "ws/detect"
-    "api/video_feed"
 ]
 
 origins = [
@@ -172,28 +171,39 @@ async def get_parking_slot(file: UploadFile = File(...)):
     return JSONResponse(content={"result": result})
 
 
-@app.get("/api/video_feed")
+@app.get("/video_feed")
 async def video_feed(url: str):
     try:
+        # Validate RTSP URL format (basic check)
+        if not url.startswith("rtsp://"):
+            raise HTTPException(status_code=400, detail="Invalid RTSP URL format. Should start with 'rtsp://'")
+
+        # Open video capture
         cap = cv2.VideoCapture(url)
-
         if not cap.isOpened():
-            raise HTTPException(status_code=500, detail="Error opening video stream")
+            raise HTTPException(status_code=500, detail="Error opening video stream.")
 
+        # Define the generator function
         def generate():
             while True:
                 success, frame = cap.read()
                 if not success:
                     break
+
+                # Encode frame as JPEG
                 _, buffer = cv2.imencode('.jpg', frame)
                 frame_bytes = buffer.tobytes()
+
+                # Construct and yield frame data
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
+        # Return StreamingResponse with correct boundary and media type
         return StreamingResponse(generate(), media_type="multipart/x-mixed-replace;boundary=frame")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
