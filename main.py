@@ -174,19 +174,20 @@ async def get_parking_slot(file: UploadFile = File(...)):
 @app.get("/video_feed")
 async def video_feed(url: str):
     try:
-        process = (
-            ffmpeg.input(url)
-            .output("pipe:", format="mjpeg", vcodec="mjpeg", vf="fps=24")
-            .run_async(pipe_stdout=True, pipe_stderr=True)  
-        )
+        cap = cv2.VideoCapture(url)
+
+        if not cap.isOpened():
+            raise HTTPException(status_code=500, detail="Error opening video stream")
 
         def generate():
             while True:
-                frame = process.stdout.read(1024)
-                if not frame:
+                success, frame = cap.read()
+                if not success:
                     break
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
         return StreamingResponse(generate(), media_type="multipart/x-mixed-replace;boundary=frame")
 
