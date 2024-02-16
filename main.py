@@ -4,16 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import io
 import base64
-import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 import cv2
-import httpx
-import numpy as np
-from io import BytesIO
-import asyncio
-import ffmpeg
-import subprocess
+import json
 
 from detect import (
     detect_numberplate,
@@ -190,13 +184,23 @@ async def video_feed(url: str):
                 if not success:
                     break
 
-                # Encode frame as JPEG
+                # # License plate detection
+                image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                frame_results = detect_numberplate(image)
+                frame_text = getOCR(image, frame_results)
+
+                # # Encode frame as JPEG
                 _, buffer = cv2.imencode('.jpg', frame)
                 frame_bytes = buffer.tobytes()
 
                 # Construct and yield frame data
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+                # Process license plate detection result for this frame
+                yield (b'Content-Type: application/json\r\n\r\n' +
+                       json.dumps({"result": frame_results, "text": frame_text}).encode() +
+                       b'\r\n')
 
         # Return StreamingResponse with correct boundary and media type
         return StreamingResponse(generate(), media_type="multipart/x-mixed-replace;boundary=frame")

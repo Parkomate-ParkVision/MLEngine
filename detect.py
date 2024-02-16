@@ -2,6 +2,7 @@ from ultralytics import YOLO
 import cv2
 import json
 from PIL import Image
+from functools import lru_cache
 
 cam_port = 0
 
@@ -18,6 +19,9 @@ def take_picture():
     image = image.tobytes()
     return image
 
+@lru_cache(maxsize=None)
+def load_model(path):
+    return YOLO(model=path)
 
 def detect_numberplate(image):
     """
@@ -26,7 +30,7 @@ def detect_numberplate(image):
     Returns:
         A list of dictionaries containing the result of the detection.
     """
-    model = YOLO(model='./models/yolov8-best.pt')
+    model = load_model('./models/yolov8-best.pt')
     results = model.predict(image, conf=0.5)
     json_results = results[0].tojson()
 
