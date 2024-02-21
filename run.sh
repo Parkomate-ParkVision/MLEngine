@@ -14,7 +14,7 @@ elif [ "$mode" == "start-dev" ]; then
     docker-compose -p ${project_name}-dev -f docker-compose.yml build
     docker-compose -p ${project_name}-dev -f docker-compose.yml up -d
 elif [ "$mode" == "stop-dev" ]; then
-    docker-compose -p ${project_name}-dev -f docker-compose.yml down
+    docker-compose -p ${project_name}-dev -f docker-compose.yml stop
 elif [ "$mode" == "interactive-dev" ]; then
     docker exec -it --user root microservice-dev bash
 elif [ "$mode" == "check-syntax" ]; then

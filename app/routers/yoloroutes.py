@@ -50,7 +50,7 @@ async def detect(image: UploadFile = File(...)):
     image = Image.open(io.BytesIO(file_bytes))
     result = detect_numberplate(image)
     response = {"result": result}
-    return Response(response, status_code=200)
+    return JSONResponse(content=response, status_code=200)
 
 
 @yolorouter.post("/detect2")
