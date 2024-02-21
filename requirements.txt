@@ -1,4 +1,8 @@
 fastapi[all]
+flake8==6.0.0
+fastapi-users[sqlalchemy]
+aiosqlite
+sqladmin[full]
+asyncpg==0.29.0
 easyocr
-ultralytics
-ffmpeg
+pillow==10.2.0

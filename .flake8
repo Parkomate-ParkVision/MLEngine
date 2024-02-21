@@ -1,0 +1,12 @@
+[flake8]
+ignore = E722, E501
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    .env,
+    dist,
+    build,
+    migrations,
+    docs
