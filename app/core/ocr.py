@@ -3,8 +3,10 @@ import numpy as np
 import re
 import cv2
 
-reader = easyocr.Reader(["en"])
-PATTERN = r"^[a-zA-Z]{2}[0-9]{2}[a-zA-Z]{2}[0-9]{4}$"
+reader = easyocr.Reader(["en"], detector=False)
+reader.detector = '../../models/fintuned_easyocr.pth'
+
+PATTERN = r"^[a-zA-Z]{2}[0-9]{2}[a-zA-Z]{2}[0-9]{1,4}$"
 
 
 def get_text(image, json_results=None):
@@ -27,7 +29,7 @@ def get_text(image, json_results=None):
                 )
                 image2 = image.crop((x1, y1, x2, y2))
                 break
-    result = reader.readtext(np.array(image2), detail=0)
+    result = reader.recognize(np.array(image2), detail=0)
     final = []
     if type(result) == list:
         for text in result:
@@ -66,7 +68,7 @@ def getOCR(image, results):
             gray = cv2.cvtColor(plate_image_cv, cv2.COLOR_RGB2GRAY)
 
             # Use the original OCR mechanism
-            results = reader.readtext(gray)
+            results = reader.recognize(gray, detail=0)
             for result in results:
                 if len(result) > 1 and len(result[1]) > 0:
                     print(result[1])
