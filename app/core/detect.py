@@ -107,9 +107,11 @@ def detect_parking_slot(image: Image.Image):
         )
         width, _ = image.size
         mid_x = (x1 + x2) / 2
-        if mid_x < width / 2:
+        if mid_x < width / 5:
             return {"result": "Upper parking"}
-        else:
+        elif mid_x > (width * (2 / 3)):
             return {"result": "Lower parking"}
+        else:
+            return {"result": "Parking can't be determined."}
     except Exception as e:
         return {"result": "No parking slot detected", "error": str(e)}
