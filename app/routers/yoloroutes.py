@@ -15,6 +15,7 @@ import cv2
 import io
 import base64
 import os
+import json
 
 
 yolorouter = APIRouter(
@@ -187,7 +188,6 @@ async def video_feed(url: str):
         A response containing the video feed.
     """
     try:
-        # Validate RTSP URL format (basic check)
         if not url.startswith("rtsp://"):
             raise HTTPException(
                 status_code=400,
@@ -206,12 +206,6 @@ async def video_feed(url: str):
                 if not success:
                     break
 
-                # # License plate detection
-                # image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                # frame_results = detect_numberplate(image)
-                # frame_text = getOCR(image, frame_results)
-
-                # # Encode frame as JPEG
                 _, buffer = cv2.imencode(".jpg", frame)
                 frame_bytes = buffer.tobytes()
 
@@ -221,15 +215,56 @@ async def video_feed(url: str):
                     b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
                 )
 
-                # Process license plate detection result for this frame
-                # yield (b'Content-Type: application/json\r\n\r\n' +
-                #        json.dumps({"result": frame_results, "text": frame_text}).encode() +
-                #        b'\r\n')
-
         # Return StreamingResponse with correct boundary and media type
         return StreamingResponse(
             generate(), media_type="multipart/x-mixed-replace;boundary=frame"
         )
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@yolorouter.get("/lp-extraction")
+async def lp_extraction(url: str):
+    """
+    Gets the video feed and just extracts the license plates. 
+    
+    Args:
+        url: str
+        
+    Returns:
+        A streaming response containing the license plates.
+    """
+    try:
+        if not url.startswith("rtsp://"):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid RTSP URL format. Should start with 'rtsp://'",
+            )
+        
+        cap = cv2.VideoCapture(url)
+        if not cap.isOpened():
+            raise HTTPException(status_code=500, detail="Error opening video stream.")
+        
+        def generate():
+            while True:
+                success, frame = cap.read()
+                if not success:
+                    break
+                
+                image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                frame_results = detect_numberplate(image)
+                frame_text = getOCR(image, frame_results)
+                
+                yield (
+                    b'Content-Type: application/json\r\n\r\n' +
+                    json.dumps({"result": frame_results, "text": frame_text}).encode() +
+                    b'\r\n'
+                )
+
+        return StreamingResponse(
+            generate(), media_type="application/json"
+        )
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
