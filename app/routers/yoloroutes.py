@@ -10,12 +10,15 @@ from core.detect import (
     detect_vehicle_type,
     detect_parking_slot,
 )
+from core.srgan import lp_enhancement
 from core.ocr import getOCR
 import cv2
 import io
 import base64
 import os
 import json
+import tempfile
+import matplotlib.pyplot as plt
 
 
 yolorouter = APIRouter(
@@ -269,3 +272,22 @@ async def lp_extraction(url: str):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+@yolorouter.post("/enhance")
+async def enhance(image: UploadFile = File(...)):
+    with tempfile.NamedTemporaryFile(delete=False) as temp_image:
+        temp_image.write(await image.read())
+
+    result = lp_enhancement(temp_image.name)
+    os.unlink(temp_image.name)  # Delete the temporary image
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_result_image:
+        plt.imsave(temp_result_image.name, result)
+
+    with open(temp_result_image.name, "rb") as result_image_file:
+        content = result_image_file.read()
+
+    os.unlink(temp_result_image.name)  # Delete the temporary result image
+
+    return Response(content, media_type="image/jpeg")

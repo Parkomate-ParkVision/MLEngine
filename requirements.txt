@@ -6,3 +6,4 @@ sqladmin[full]
 asyncpg==0.29.0
 easyocr
 pillow==10.2.0
+tensorflow==2.11.0
