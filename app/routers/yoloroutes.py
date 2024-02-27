@@ -126,6 +126,7 @@ async def detect_license_plates(video: UploadFile = File(...)):
         result_list.extend(frame_results)
 
         frame_text = getOCR(image, frame_results)
+        print(frame_text)
         text_list.append(frame_text)
 
     text_list = [text for text in text_list if text != []]

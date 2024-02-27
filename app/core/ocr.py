@@ -69,9 +69,6 @@ def getOCR(image, results):
 
             # Use the original OCR mechanism
             results = reader.recognize(gray, detail=0)
-            for result in results:
-                if len(result) > 1 and len(result[1]) > 0:
-                    print(result[1])
-                    ocr_texts.append(result[1])
+            ocr_texts.append([result for result in results])
 
     return ocr_texts
