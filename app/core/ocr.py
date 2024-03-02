@@ -3,8 +3,8 @@ import numpy as np
 import re
 import cv2
 
-reader = easyocr.Reader(["en"], detector=False)
-reader.detector = '../../models/fintuned_easyocr.pth'
+reader = easyocr.Reader(["en"])
+# reader.detector = '../../models/fintuned_easyocr.pth'
 
 PATTERN = r"^[a-zA-Z]{2}[0-9]{2}[a-zA-Z]{2}[0-9]{1,4}$"
 
@@ -68,7 +68,7 @@ def getOCR(image, results):
             gray = cv2.cvtColor(plate_image_cv, cv2.COLOR_RGB2GRAY)
 
             # Use the original OCR mechanism
-            results = reader.recognize(gray, detail=0)
+            results = reader.readtext(gray)
             ocr_texts.append([result for result in results])
 
     return ocr_texts

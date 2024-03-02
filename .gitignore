@@ -162,3 +162,4 @@ cython_debug/
 predictions/
 *mp4
 *jpg
+*.txt
