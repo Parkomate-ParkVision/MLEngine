@@ -19,6 +19,7 @@ import os
 import json
 import tempfile
 import matplotlib.pyplot as plt
+import re 
 
 
 yolorouter = APIRouter(
@@ -137,7 +138,7 @@ async def detect_license_plates(video: UploadFile = File(...)):
             if j != []:
                 number_plates.append(j[0][1])
 
-    number_plates = [plate.replace(" ", "").replace("-", "").replace("{", "").replace("}", "").replace("!", "").replace("(", "").replace(")", "") for plate in number_plates if plate != ""]
+    number_plates = [re.sub(r'[^a-zA-Z0-9]', '', plate) for plate in number_plates if plate.strip()]
  
     with open("number_plates.txt", "w") as file:
         for plate in number_plates:
