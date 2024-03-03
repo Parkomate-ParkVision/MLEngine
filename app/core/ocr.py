@@ -72,3 +72,20 @@ def getOCR(image, results):
             ocr_texts.append([result for result in results])
 
     return ocr_texts
+
+
+def get_similar_number_plates(number_plates):
+    similar_number_plates = []
+    similar_number_plates.append([number_plates[0]])
+    for i in range(1, len(number_plates)):
+        if number_plates[i][0] == number_plates[i-1][0]:
+            similar_number_plates[-1].append(number_plates[i])
+        else:
+            similar_number_plates.append([number_plates[i]])
+    result = []
+    for i in similar_number_plates:
+        if len(i) > 5:
+            result.append(max(i, key=i.count))
+    result = list(dict.fromkeys(result))
+    
+    return result

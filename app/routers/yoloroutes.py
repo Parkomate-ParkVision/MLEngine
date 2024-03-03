@@ -11,7 +11,7 @@ from core.detect import (
     detect_parking_slot,
 )
 from core.srgan import lp_enhancement
-from core.ocr import getOCR
+from core.ocr import getOCR, get_similar_number_plates
 import cv2
 import io
 import base64
@@ -136,20 +136,50 @@ async def detect_license_plates(video: UploadFile = File(...)):
     for i in text_list:
         for j in i:
             if j != []:
-                number_plates.append(j[0][1])
+                if len(j[0][1]) > 5: 
+                    number_plates.append(j[0][1])
 
     number_plates = [re.sub(r'[^a-zA-Z0-9]', '', plate) for plate in number_plates if plate.strip()]
+    number_plates = [re.sub(r'o', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'e', '6', plate) for plate in number_plates]
+    number_plates = [re.sub(r'v', 'V', plate) for plate in number_plates]
+    number_plates = [re.sub(r's', '5', plate) for plate in number_plates]
+    number_plates = [re.sub(r'z', '2', plate) for plate in number_plates]
+    number_plates = [re.sub(r'i', '1', plate) for plate in number_plates]
+    number_plates = [re.sub(r't', '7', plate) for plate in number_plates]
+    number_plates = [re.sub(r'b', '8', plate) for plate in number_plates]
+    number_plates = [re.sub(r'g', '9', plate) for plate in number_plates]
+    number_plates = [re.sub(r'q', '9', plate) for plate in number_plates]
+    number_plates = [re.sub(r'l', '1', plate) for plate in number_plates]
+    number_plates = [re.sub(r'd', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'a', '4', plate) for plate in number_plates]
+    number_plates = [re.sub(r'c', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'f', '7', plate) for plate in number_plates]
+    number_plates = [re.sub(r'h', '4', plate) for plate in number_plates]
+    number_plates = [re.sub(r'j', '1', plate) for plate in number_plates]
+    number_plates = [re.sub(r'k', '4', plate) for plate in number_plates]
+    number_plates = [re.sub(r'm', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'n', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'p', '9', plate) for plate in number_plates]
+    number_plates = [re.sub(r'r', '2', plate) for plate in number_plates]
+    number_plates = [re.sub(r'u', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'w', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'x', '0', plate) for plate in number_plates]
+    number_plates = [re.sub(r'y', '0', plate) for plate in number_plates]
+
  
     with open("number_plates.txt", "w") as file:
         for plate in number_plates:
             file.write(plate + "\n")
+
+    result = get_similar_number_plates(number_plates)
 
     video_capture.release()
     try:
         os.remove(temp_video_path)
     except OSError:
         pass
-    response = {"text": number_plates}
+    response = {"result": result}
     return JSONResponse(content=response)
 
 
