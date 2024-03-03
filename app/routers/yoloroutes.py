@@ -20,6 +20,9 @@ import json
 import tempfile
 import matplotlib.pyplot as plt
 import re 
+import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 
 yolorouter = APIRouter(
@@ -96,6 +99,30 @@ async def detect3(file: UploadFile = File(...)):
     return JSONResponse(content=response)
 
 
+access_token = None
+def login():
+    global access_token
+    if access_token is None:
+        response = requests.post(
+            "http://127.0.0.1:8000/login/",
+            data={"email": os.getenv("EMAIL"), "password": os.getenv("PASSWORD")},
+        )
+        access_token = response.json()["tokens"]["access"]
+    return access_token
+
+
+def create_vehicle_instances(number_plates):
+    access_token = login()
+    headers = {"Authorization": f"Bearer {access_token}"}
+    for plate in number_plates:
+        response = requests.post(
+            "http://127.0.0.1:8000/vehicles/",
+            headers=headers,
+            data={"number_plate": plate},
+        )
+        print(response.json(), flush=True)
+
+
 @yolorouter.post("/detect4")
 async def detect_license_plates(video: UploadFile = File(...)):
     """
@@ -167,12 +194,9 @@ async def detect_license_plates(video: UploadFile = File(...)):
     number_plates = [re.sub(r'x', '0', plate) for plate in number_plates]
     number_plates = [re.sub(r'y', '0', plate) for plate in number_plates]
 
- 
-    with open("number_plates.txt", "w") as file:
-        for plate in number_plates:
-            file.write(plate + "\n")
-
     result = get_similar_number_plates(number_plates)
+
+    create_vehicle_instances(result)
 
     video_capture.release()
     try:
