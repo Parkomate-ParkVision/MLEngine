@@ -1,6 +1,7 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 WORKDIR /app
 COPY ./requirements.txt .
+COPY ./.env .
 RUN pip install torch==2.2.0
 RUN pip install -r requirements.txt
 RUN pip install ultralytics

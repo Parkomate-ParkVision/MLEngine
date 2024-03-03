@@ -103,9 +103,12 @@ access_token = None
 def login():
     global access_token
     if access_token is None:
+        email = os.environ.get("EMAIL")
+        password = os.environ.get("PASSWORD")
+        payload = {"email": "admin@admin.com", "password": "123"}
         response = requests.post(
-            "http://127.0.0.1:8000/login/",
-            data={"email": os.getenv("EMAIL"), "password": os.getenv("PASSWORD")},
+            "http://172.22.0.5:8000/login/",
+            data=payload,
         )
         access_token = response.json()["tokens"]["access"]
     return access_token
@@ -116,11 +119,10 @@ def create_vehicle_instances(number_plates):
     headers = {"Authorization": f"Bearer {access_token}"}
     for plate in number_plates:
         response = requests.post(
-            "http://127.0.0.1:8000/vehicles/",
+            "http://172.22.0.5:8000/vehicles/",
             headers=headers,
             data={"number_plate": plate},
         )
-        print(response.json(), flush=True)
 
 
 @yolorouter.post("/detect4")

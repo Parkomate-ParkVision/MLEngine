@@ -10,5 +10,11 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload
     ports:
       - "8080:8080"
+    networks:
+      - parkomate-dev_parkvision-network
     volumes:
       - ./app:/app
+
+networks:
+  parkomate-dev_parkvision-network:
+    external: true
