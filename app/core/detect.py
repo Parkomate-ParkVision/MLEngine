@@ -49,7 +49,7 @@ def get_cropped_images(image):
         A list of PIL.Image objects containing the cropped images of the
         detected number plates.
     """
-    model = YOLO(model="../models/yolov8-best.pt")
+    model = load_model("../models/yolov8-best.pt")
     results = model.predict(image, conf=0.5)
     results[0].save_crop("predictions")
     json_results = results[0].tojson()
@@ -75,7 +75,7 @@ def detect_vehicle_type(image):
     Returns:
         A list of dictionaries containing the result of the detection.
     """
-    model = YOLO(model="../models/vehicle-detection.pt")
+    model = load_model("../models/vehicle-detection.pt")
     results = model.predict(image, conf=0.5)
     json_results = results[0].tojson()
 
@@ -91,7 +91,7 @@ def detect_parking_slot(image: Image.Image):
     Returns:
         Json response containing the result of the detection.
     """
-    model = YOLO(model="../models/vehicle-orientation.pt")
+    model = load_model("../models/vehicle-orientation.pt")
     results = model.predict(image, conf=0.5)
     json_results = results[0].tojson()
 
